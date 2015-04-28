@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-import sys, re, os, codecs, json, copy
+import sys, re, os, codecs, json, copy, time
 from Tkinter import *
 from optparse import OptionParser
 sys.path.insert(0, "..")
@@ -22,8 +22,9 @@ class GFL_Anno(Frame):
     def dumpAnnotations(self):
         print "Dumping Annotations"
         f = open(options.outputFile,'w')
-        for anno in self.annotations:
-            f.write(anno[-1]+"\n")
+        for index, anno in enumerate(self.annotations):
+            jsonLine = """{"comment":"","last":false,"number":"""+str(index)+""","submitted":["""+str(int(time.time()))+"""],"pos":null,"anno":" """+anno[-1].strip().replace("\n", "\\n")+""" ","user":null,"analyzed":["""+str(int(time.time()))+"""],"accessed":["""+str(int(time.time()))+"""],"dataset":"null","id":"0","sent":" """+anno[0].strip()+""" ","userAdd":false}"""
+            f.write(jsonLine+"\n")
         f.close()
 
     def onBracketButtonPress(self,editingBox):
