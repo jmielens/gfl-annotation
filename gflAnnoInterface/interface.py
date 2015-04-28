@@ -148,7 +148,7 @@ if __name__ == '__main__':
                   help="Location of sentences to annotate, one sentence per line")
     parser.add_option("-o", "--output", dest="outputFile",
                   help="Location of JSON output file")
-    parser.set_defaults(outputFile="out")
+    parser.set_defaults(outputFile="out.json")
     (options, args) = parser.parse_args()
 
     main() 
