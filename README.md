@@ -8,7 +8,7 @@ A local annotation interface for FUDG/GFL.
 * Navigate sentences using the `Next` and `Prev` buttons.
 * When finished, select `File > Dump Annotations` to output the annotations to the JSON file (default out.json)
 
-## Errors ##
+## Error Handling ##
 
 * Use the `Check` button to check the current annotation for errors. If errors occur the bar will turn red.
-* To correct an error, press the `Undo` button to return the annotation to its last good state.
+* To correct a detected error, press the `Undo` button to return the annotation to its last good state.
