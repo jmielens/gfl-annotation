@@ -14,17 +14,29 @@ class GFL_Anno(Frame):
          
         self.parent = parent
         self.sentences = sentences
-        self.annotations = [[sentence] for sentence in self.sentences]
+        self.annotations = [[sentence.decode('utf8')] for sentence in self.sentences]
         self.sentenceIndex = -1
         
         self.initUI()
 
     def dumpAnnotations(self):
         print "Dumping Annotations"
-        f = open(options.outputFile,'w')
+        f = codecs.open(options.outputFile,'w','utf-8')
         for index, anno in enumerate(self.annotations):
-            jsonLine = """{"comment":"","last":false,"number":"""+str(index)+""","submitted":["""+str(int(time.time()))+"""],"pos":null,"anno":" """+anno[-1].strip().replace("\n", "\\n")+""" ","user":null,"analyzed":["""+str(int(time.time()))+"""],"accessed":["""+str(int(time.time()))+"""],"dataset":"null","id":"0","sent":" """+anno[0].strip()+""" ","userAdd":false}"""
-            f.write(jsonLine+"\n")
+            jsonLine = """{"comment":"","last":false,"number":"""
+            jsonLine += str(index)
+            jsonLine += ""","submitted":["""
+            jsonLine += str(int(time.time()))
+            jsonLine += """],"pos":null,"anno":" """
+            jsonLine += anno[-1].replace("\n", "\\n")
+            jsonLine += """ ","user":null,"analyzed":["""
+            jsonLine += str(int(time.time()))
+            jsonLine += """],"accessed":["""
+            jsonLine += str(int(time.time()))
+            jsonLine += """],"dataset":"null","id":"0","sent":" """
+            jsonLine += anno[0].replace("\n", "\\n")
+            jsonLine += """ ","userAdd":false}"""
+            f.write(jsonLine+u"\n")
         f.close()
 
     def onBracketButtonPress(self,editingBox):
@@ -47,7 +59,6 @@ class GFL_Anno(Frame):
             self.sentenceDisplay.config(bg="red")
             return False
 
-        print self.annotations
         return True
         
 
@@ -93,7 +104,7 @@ class GFL_Anno(Frame):
         
 
         # Build Sentence Display Area
-        self.sentenceDisplay = Label(self, font=("Helvetica",16), bg="grey", textvariable=self.rawSentence)
+        self.sentenceDisplay = Label(self, font=("Helvetica",12), bg="grey", textvariable=self.rawSentence)
         self.sentenceDisplay.pack(side=TOP,padx=10,pady=10)
         self.rawSentence.set("GFL Annotation System")
 
@@ -117,7 +128,7 @@ class GFL_Anno(Frame):
         nextButton.pack(side=LEFT,padx=5,pady=5)
 
         # Edit Box
-        self.gflEdit = Text(editingFrame)
+        self.gflEdit = Text(editingFrame,width=120,wrap=WORD)
         self.gflEdit.insert(END,"Press the 'Next' button to begin...")
         self.gflEdit.pack()
 
