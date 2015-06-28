@@ -3,6 +3,7 @@
 import sys, re, os, codecs, json, copy, time
 from Tkinter import *
 from optparse import OptionParser
+from nltk.tokenize.stanford import StanfordTokenizer
 sys.path.insert(0, "..")
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'gflparser'))
 import gfl_parser
@@ -135,7 +136,25 @@ class GFL_Anno(Frame):
 
 def main():
 
-    sentences = [line.strip() for line in open(options.sentenceFile)]
+    tokenizer = StanfordTokenizer(path_to_jar=os.path.dirname(os.path.realpath(__file__))+"/stanford-postagger.jar")
+
+    if options.sentenceFile != "":
+        sentences = [line.strip() for line in open(options.sentenceFile)]
+    else:
+        jFile = open(options.jsonSentsFile)
+        sentences = [sent['clean'] for sent in json.load(jFile)]
+        jFile.close()
+
+    if options.tokenize:
+        newSents = []
+        for sent in sentences:
+            toks = tokenizer.tokenize(sent)
+            for tok in toks:
+                if toks.count(tok) > 1:
+                    for num in range(1,toks.count(tok)+1):
+                        toks[toks.index(tok)] = tok+"~"+str(num)
+            newSents.append(u" ".join(toks))
+        sentences = newSents
 
     root = Tk()
     root.geometry("1300x700+100+100")
@@ -157,9 +176,13 @@ if __name__ == '__main__':
     parser = OptionParser()
     parser.add_option("-s", "--sentences", dest="sentenceFile",
                   help="Location of sentences to annotate, one sentence per line")
+    parser.add_option("-j", "--jsonSents", dest="jsonSentsFile",
+                  help="Location of sentences to annotate, JSON format")
+    parser.add_option("-t", "--tokenize", dest="tokenize", action="store_true",
+                  help="Tokenize input sentences")
     parser.add_option("-o", "--output", dest="outputFile",
                   help="Location of JSON output file")
-    parser.set_defaults(outputFile="out.json")
+    parser.set_defaults(outputFile="out.json",sentenceFile="")
     (options, args) = parser.parse_args()
 
     main() 
