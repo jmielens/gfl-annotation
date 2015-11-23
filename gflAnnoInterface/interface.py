@@ -8,6 +8,21 @@ sys.path.insert(0, "..")
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'gflparser'))
 import gfl_parser
 
+
+def subscript_add(sentenceList):
+
+    for wType in set(sentenceList):
+        if sentenceList.count(wType) > 1:
+            sentIndex = 0
+            count = 1
+            for word in sentenceList:
+                if word == wType:
+                    sentenceList[sentIndex] = word+"~"+str(count)
+                    count += 1
+                sentIndex += 1
+
+    return sentenceList
+
 class GFL_Anno(Frame):
   
     def __init__(self, parent, sentences):
@@ -15,13 +30,13 @@ class GFL_Anno(Frame):
          
         self.parent = parent
         self.sentences = sentences
-        self.annotations = [[sentence.decode('utf8')] for sentence in self.sentences]
+        self.annotations = [[sentence.replace(u'\xa0', u' ')] for sentence in self.sentences]
         self.sentenceIndex = -1
         
         self.initUI()
 
     def dumpAnnotations(self):
-        print "Dumping Annotations"
+        #print "Dumping Annotations"
         f = codecs.open(options.outputFile,'w','utf-8')
         for index, anno in enumerate(self.annotations):
             jsonLine = """{"comment":"","last":false,"number":"""
@@ -50,12 +65,13 @@ class GFL_Anno(Frame):
         currentAnnotation = self.gflEdit.get(1.0,END)
         self.config(bg="grey")
         self.sentenceDisplay.config(bg="grey")
-        print "Checked GFL"
+        #print "Checked GFL"
         try:
             self.annotations[self.sentenceIndex].append(currentAnnotation)
+            print currentAnnotation,self.rawSentence.get().split()
             parse = gfl_parser.parse(self.rawSentence.get().split(), currentAnnotation, check_semantics=True)
         except Exception, e:
-            print "GFL Error!"
+            #print "GFL Error!"
             self.config(bg="red")
             self.sentenceDisplay.config(bg="red")
             return False
@@ -64,12 +80,13 @@ class GFL_Anno(Frame):
         
 
     def undoAnnotation(self):
-        print "Undo-ing Last Annotation"
-        self.config(bg="grey")
-        self.sentenceDisplay.config(bg="grey")
-        self.annotations[self.sentenceIndex] = self.annotations[self.sentenceIndex][:-1]
-        self.gflEdit.delete(1.0, END)
-        self.gflEdit.insert(END,self.annotations[self.sentenceIndex][-1])
+        #print "Undo-ing Last Annotation"
+        if len(self.annotations[self.sentenceIndex]) > 1:
+            self.config(bg="grey")
+            self.sentenceDisplay.config(bg="grey")
+            self.annotations[self.sentenceIndex] = self.annotations[self.sentenceIndex][:-1]
+            self.gflEdit.delete(1.0, END)
+            self.gflEdit.insert(END,self.annotations[self.sentenceIndex][-1])
 
     def changeSentence(self,next):
         self.config(bg="grey")
@@ -87,14 +104,16 @@ class GFL_Anno(Frame):
                 self.rawSentence.set(self.sentences[self.sentenceIndex])
                 self.gflEdit.delete(1.0, END)
                 self.gflEdit.insert(END,self.annotations[self.sentenceIndex][-1])
-                print "Next Sentence..."
+                #print "Next Sentence..."
         else:
             if (self.sentenceIndex > 0):
                 self.sentenceIndex -= 1
                 self.rawSentence.set(self.sentences[self.sentenceIndex])
                 self.gflEdit.delete(1.0, END)
                 self.gflEdit.insert(END,self.annotations[self.sentenceIndex][-1])
-                print "Previous Sentence..."
+                #print "Previous Sentence..."
+
+        self.parent.title("GFL Annotation Interface - "+str(self.sentenceIndex+1))
     
     def initUI(self):
       
@@ -139,7 +158,10 @@ def main():
     tokenizer = StanfordTokenizer(path_to_jar=os.path.dirname(os.path.realpath(__file__))+"/stanford-postagger.jar")
 
     if options.sentenceFile != "":
-        sentences = [line.strip() for line in open(options.sentenceFile)]
+        if options.sentenceFile.endswith("conll"):
+            sentences = [" ".join(subscript_add([line.split("\t")[1] for line in rawSentence.split("\n") if len(line.split("\t")) > 4 and line.split("\t")[3] != "."])) for rawSentence in open(options.sentenceFile).read().split("\n\n")]
+        else:
+            sentences = [line.strip() for line in open(options.sentenceFile)]
     else:
         jFile = open(options.jsonSentsFile)
         sentences = [sent['clean'] for sent in json.load(jFile)]
@@ -153,6 +175,12 @@ def main():
                 if toks.count(tok) > 1:
                     for num in range(1,toks.count(tok)+1):
                         toks[toks.index(tok)] = tok+"~"+str(num)
+            newSents.append(u" ".join(toks))
+        sentences = newSents
+    else:
+        newSents = []
+        for sent in sentences:
+            toks = [tok.decode('utf-8') for tok in sent.split()]
             newSents.append(u" ".join(toks))
         sentences = newSents
 
