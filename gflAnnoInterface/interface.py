@@ -160,6 +160,7 @@ def main():
     if options.sentenceFile != "":
         if options.sentenceFile.endswith("conll"):
             sentences = [" ".join(subscript_add([line.split("\t")[1] for line in rawSentence.split("\n") if len(line.split("\t")) > 4 and line.split("\t")[3] != "."])) for rawSentence in open(options.sentenceFile).read().split("\n\n")]
+            sentences = [s for s in sentences if len(s.split(" ")) <= options.maxLength]
         else:
             sentences = [line.strip() for line in open(options.sentenceFile)]
     else:
@@ -210,7 +211,9 @@ if __name__ == '__main__':
                   help="Tokenize input sentences")
     parser.add_option("-o", "--output", dest="outputFile",
                   help="Location of JSON output file")
-    parser.set_defaults(outputFile="out.json",sentenceFile="")
+    parser.add_option("-l", "--length", dest="maxLength",
+                  help="Maximum Sentence Length")
+    parser.set_defaults(outputFile="out.json",sentenceFile="",maxLength=30)
     (options, args) = parser.parse_args()
 
     main() 
